@@ -4,11 +4,28 @@
   "description": "jujutsuで文書の変更履歴を自動記録する拡張機能",
   "version": "0.1.0",
   "publisher": "rubellum",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubellum/jjj.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rubellum/jjj/issues"
+  },
+  "homepage": "https://github.com/rubellum/jjj#readme",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "jujutsu",
+    "version-control",
+    "git",
+    "auto-commit",
+    "auto-sync"
   ],
   "activationEvents": [
     "onStartupFinished"
