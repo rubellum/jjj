@@ -72,7 +72,11 @@ export class SyncEngine {
         this.statusBar.setState('有効');
       }
 
-      // Step 5: 自動同期タイマー開始
+      // Step 5: 自動同期の状態を反映
+      const config = this.getConfig();
+      this.statusBar.setAutoSyncEnabled(config.autoSyncEnabled);
+
+      // Step 6: 自動同期タイマー開始
       await this.startAutoSync();
 
       logger.info('DocSync initialization completed');
@@ -90,10 +94,12 @@ export class SyncEngine {
     const config = this.getConfig();
     if (!config.autoSyncEnabled) {
       logger.info('Auto sync is disabled in config');
+      this.statusBar.setAutoSyncEnabled(false);
       return;
     }
 
     logger.info('Starting auto sync');
+    this.statusBar.setAutoSyncEnabled(true);
 
     // 自動プルタイマーを設定
     // （自動コミットはFileWatcher経由で動的に開始）
@@ -110,6 +116,7 @@ export class SyncEngine {
   stopAutoSync(): void {
     logger.info('Stopping auto sync');
     this.scheduler.clearAll();
+    this.statusBar.setAutoSyncEnabled(false);
   }
 
   /**

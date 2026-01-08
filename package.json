@@ -34,6 +34,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "jjj.toggleAutoSync",
+        "title": "JJJ: 自動同期を切り替え"
+      },
+      {
         "command": "jjj.manualSync",
         "title": "JJJ: 今すぐ同期",
         "icon": "$(sync)"
@@ -52,8 +56,8 @@
       "properties": {
         "jjj.autoSyncEnabled": {
           "type": "boolean",
-          "default": true,
-          "description": "自動同期を有効化"
+          "default": false,
+          "description": "自動同期を有効化（リポジトリごとに設定を推奨）"
         }
       }
     }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { SyncEngine } from '../core/syncEngine';
-import { manualSync, enableAutoSync, disableAutoSync } from './manualSync';
+import { toggleAutoSync, manualSync, enableAutoSync, disableAutoSync } from './manualSync';
 import { logger } from '../utils/logger';
 
 /**
@@ -11,6 +11,11 @@ export function registerCommands(
   syncEngine: SyncEngine
 ): void {
   logger.info('Registering commands');
+
+  // 自動同期の切り替えコマンド
+  context.subscriptions.push(
+    vscode.commands.registerCommand('jjj.toggleAutoSync', () => toggleAutoSync(syncEngine))
+  );
 
   // 手動同期コマンド
   context.subscriptions.push(
