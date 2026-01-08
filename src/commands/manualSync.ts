@@ -24,8 +24,7 @@ export async function toggleAutoSync(syncEngine: SyncEngine): Promise<void> {
         '有効化すると、ファイル保存後に自動的にコミット・プッシュされます。\n' +
         'リモートリポジトリに変更が送信されるため、慎重に判断してください。',
         { modal: true },
-        '有効化する',
-        'キャンセル'
+        '有効化する'
       );
 
       if (result === '有効化する') {
