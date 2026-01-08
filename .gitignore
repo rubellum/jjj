@@ -4,3 +4,13 @@ dist
 *.vsix
 .vscode-test/
 .DS_Store
+
+# Environment variables
+.env*
+
+# Logs
+*.log
+
+# Keys and certificates
+*.key
+*.pem
