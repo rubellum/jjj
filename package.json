@@ -2,7 +2,7 @@
   "name": "jjj",
   "displayName": "Jujutsu Journaling",
   "description": "jujutsuで文書の変更履歴を自動記録する拡張機能",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "rubellum",
   "license": "MIT",
   "repository": {
