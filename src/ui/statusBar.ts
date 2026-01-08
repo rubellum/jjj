@@ -13,7 +13,7 @@ export class StatusBarManager {
       vscode.StatusBarAlignment.Right,
       100
     );
-    this.statusBarItem.command = 'docsync.manualSync';
+    this.statusBarItem.command = 'jjj.manualSync';
     this.statusBarItem.show();
   }
 
@@ -58,13 +58,13 @@ export class StatusBarManager {
 
       case '有効':
         this.statusBarItem.text = '$(sync) 同期: 有効';
-        this.statusBarItem.command = 'docsync.manualSync';
+        this.statusBarItem.command = 'jjj.manualSync';
         this.statusBarItem.tooltip = '自動同期が有効です。クリックして手動同期を実行';
         break;
 
       case 'オフライン':
         this.statusBarItem.text = '$(cloud-offline) 同期: オフライン';
-        this.statusBarItem.command = 'docsync.manualSync';
+        this.statusBarItem.command = 'jjj.manualSync';
         this.statusBarItem.tooltip = 'リモートに接続できません。クリックして再試行';
         break;
 
@@ -76,13 +76,13 @@ export class StatusBarManager {
 
       case '同期完了':
         this.statusBarItem.text = '$(check) 同期完了';
-        this.statusBarItem.command = 'docsync.manualSync';
+        this.statusBarItem.command = 'jjj.manualSync';
         this.statusBarItem.tooltip = '同期が完了しました';
         break;
 
       case '同期完了（コンフリクトあり）':
         this.statusBarItem.text = '$(warning) 同期完了（コンフリクトあり）';
-        this.statusBarItem.command = 'docsync.manualSync';
+        this.statusBarItem.command = 'jjj.manualSync';
         this.statusBarItem.tooltip = 'コンフリクトがあります。手動で解消してください';
         break;
 

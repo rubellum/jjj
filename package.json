@@ -1,9 +1,9 @@
 {
-  "name": "docsync",
-  "displayName": "DocSync",
-  "description": "jujutsuを使用したドキュメント自動同期拡張機能",
+  "name": "jjj",
+  "displayName": "Jujutsu Journaling",
+  "description": "jujutsuで文書の変更履歴を自動記録する拡張機能",
   "version": "0.1.0",
-  "publisher": "docsync",
+  "publisher": "jjj",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -17,44 +17,26 @@
   "contributes": {
     "commands": [
       {
-        "command": "docsync.manualSync",
-        "title": "DocSync: 今すぐ同期",
+        "command": "jjj.manualSync",
+        "title": "JJJ: 今すぐ同期",
         "icon": "$(sync)"
       },
       {
-        "command": "docsync.enable",
-        "title": "DocSync: 自動同期を有効化"
+        "command": "jjj.enable",
+        "title": "JJJ: 自動同期を有効化"
       },
       {
-        "command": "docsync.disable",
-        "title": "DocSync: 自動同期を無効化"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "docsync.manualSync",
-        "key": "ctrl+shift+s",
-        "mac": "cmd+shift+s",
-        "when": "editorTextFocus"
+        "command": "jjj.disable",
+        "title": "JJJ: 自動同期を無効化"
       }
     ],
     "configuration": {
-      "title": "DocSync",
+      "title": "Jujutsu Journaling",
       "properties": {
-        "docsync.autoSyncEnabled": {
+        "jjj.autoSyncEnabled": {
           "type": "boolean",
           "default": true,
           "description": "自動同期を有効化"
-        },
-        "docsync.syncIntervalMin": {
-          "type": "number",
-          "default": 30,
-          "description": "同期間隔の最小値（秒）"
-        },
-        "docsync.syncIntervalMax": {
-          "type": "number",
-          "default": 90,
-          "description": "同期間隔の最大値（秒）"
         }
       }
     }

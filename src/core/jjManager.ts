@@ -74,21 +74,16 @@ export class JJManager {
    */
   async checkRemoteConnection(): Promise<boolean> {
     try {
-      const output = await this.runCommand('jj git remote -v');
+      // gitコマンドでリモート設定を確認
+      const output = await this.runCommand('git remote -v');
       if (!output || output.trim() === '') {
         logger.warn('No remote repository configured');
         return false;
       }
 
-      // リモートが設定されている場合、接続テスト
-      try {
-        await this.runCommand('jj git fetch --dry-run', 10000);
-        logger.info('Remote connection successful');
-        return true;
-      } catch (fetchError) {
-        logger.warn('Remote configured but connection failed');
-        return false;
-      }
+      // リモートが設定されていればtrueを返す
+      logger.info('Remote repository configured');
+      return true;
     } catch (error) {
       logger.warn('Failed to check remote connection');
       return false;
@@ -130,10 +125,58 @@ export class JJManager {
    */
   async push(): Promise<void> {
     try {
-      await this.runCommand('jj git push');
-      logger.info('Pushed to remote successfully');
+      // 現在のgitブランチを取得
+      const branch = await this.getCurrentBranch();
+
+      if (branch) {
+        // ブックマークを1つ前のコミット（実際のコミット）に設定
+        // jj commitの後は新しい空のワーキングコピーが作られるため、@-を指定
+        await this.runCommand(`jj bookmark set ${branch} -r @-`);
+
+        try {
+          // ブックマークをpush
+          await this.runCommand(`jj git push --bookmark ${branch}`);
+          logger.info(`Pushed to remote successfully (branch: ${branch})`);
+        } catch (pushError: any) {
+          // "Non-tracking remote bookmark" エラーの場合はトラッキングしてリトライ
+          if (pushError.message && pushError.message.includes('Non-tracking remote bookmark')) {
+            logger.info(`Setting up tracking for ${branch}@origin`);
+            await this.runCommand(`jj bookmark track ${branch}@origin`);
+            await this.runCommand(`jj git push --bookmark ${branch}`);
+            logger.info(`Pushed to remote successfully (branch: ${branch}, tracking set up)`);
+          } else {
+            throw pushError;
+          }
+        }
+      } else {
+        // ブランチが取得できない場合は全ブックマークをpush
+        await this.runCommand('jj git push --all');
+        logger.info('Pushed to remote successfully (all bookmarks)');
+      }
     } catch (error) {
       throw parseJJError(error);
+    }
+  }
+
+  /**
+   * 現在のgitブランチを取得
+   */
+  private async getCurrentBranch(): Promise<string | null> {
+    try {
+      const output = await this.runCommand('git branch --show-current');
+      const branch = output.trim();
+
+      // detached HEADの場合は空文字列が返るので、mainを使う
+      if (!branch) {
+        logger.debug('Detached HEAD detected, using main branch');
+        return 'main';
+      }
+
+      logger.debug(`Current branch: ${branch}`);
+      return branch;
+    } catch (error) {
+      logger.warn('Failed to get current branch', error as Error);
+      return null;
     }
   }
 
@@ -154,8 +197,8 @@ export class JJManager {
    */
   async hasRemoteChanges(): Promise<boolean> {
     try {
-      // リモートブランチとの差分をチェック
-      const output = await this.runCommand('jj log -r "remote_branches()..@" --no-graph -T "commit_id"');
+      // リモートブックマークとの差分をチェック (新しいjjバージョンではremote_bookmarks)
+      const output = await this.runCommand('jj log -r "remote_bookmarks()..@" --no-graph -T "commit_id"');
       const hasChanges = output.trim() !== '';
       logger.debug(`Remote changes: ${hasChanges}`);
       return hasChanges;

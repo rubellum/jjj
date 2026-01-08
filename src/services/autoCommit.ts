@@ -24,27 +24,24 @@ export class AutoCommitService {
   ) {}
 
   /**
-   * UC-02: ファイル変更をキューに追加
+   * UC-02: ファイル変更をキューに追加（デバウンス方式）
    */
   queueChange(file: vscode.Uri): void {
     const filePath = file.fsPath;
     this.changeQueue.add(filePath);
     logger.debug(`File queued for commit: ${filePath} (queue size: ${this.changeQueue.size})`);
 
-    // 初回追加時にタイマー開始
-    if (this.changeQueue.size === 1 && !this.isProcessing) {
-      const config = vscode.workspace.getConfiguration('docsync');
-      const minMs = config.get<number>('syncIntervalMin', 30) * 1000;
-      const maxMs = config.get<number>('syncIntervalMax', 90) * 1000;
+    // 既存のタイマーをクリア（デバウンス）
+    this.scheduler.clearTimer('auto-commit');
 
-      this.scheduler.scheduleOnce(
-        'auto-commit',
-        () => this.processQueue(),
-        this.getRandomInterval(minMs, maxMs)
-      );
+    // 新しいタイマーを開始（1分固定）
+    this.scheduler.scheduleOnce(
+      'auto-commit',
+      () => this.processQueue(),
+      CONSTANTS.DEBOUNCE_DELAY  // 1分 = 60000ms
+    );
 
-      logger.info(`Auto-commit timer started (queue size: ${this.changeQueue.size})`);
-    }
+    logger.debug(`Auto-commit timer reset (debounce: ${CONSTANTS.DEBOUNCE_DELAY}ms)`);
   }
 
   /**
@@ -58,6 +55,19 @@ export class AutoCommitService {
     this.isProcessing = true;
 
     try {
+      // 実際に変更があるかチェック
+      const hasChanges = await this.jjManager.hasUncommittedChanges();
+
+      if (!hasChanges) {
+        // 変更がない場合はコミット・プッシュをスキップ
+        logger.info(
+          `No uncommitted changes found. Skipping auto-commit (queue had ${this.changeQueue.size} files)`
+        );
+        this.changeQueue.clear();
+        this.retryCount = 0;
+        return;
+      }
+
       this.statusBar.setState('同期中');
 
       // Step 1: コミット
@@ -163,13 +173,6 @@ export class AutoCommitService {
     const now = new Date();
     const timestamp = now.toISOString().slice(0, 16).replace('T', ' ');
     return `${CONSTANTS.AUTO_COMMIT_PREFIX} ${timestamp}`;
-  }
-
-  /**
-   * ランダム間隔を生成
-   */
-  private getRandomInterval(minMs: number, maxMs: number): number {
-    return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
   }
 
   /**

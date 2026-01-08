@@ -14,17 +14,17 @@ export function registerCommands(
 
   // 手動同期コマンド
   context.subscriptions.push(
-    vscode.commands.registerCommand('docsync.manualSync', () => manualSync(syncEngine))
+    vscode.commands.registerCommand('jjj.manualSync', () => manualSync(syncEngine))
   );
 
   // 自動同期を有効化
   context.subscriptions.push(
-    vscode.commands.registerCommand('docsync.enable', () => enableAutoSync(syncEngine))
+    vscode.commands.registerCommand('jjj.enable', () => enableAutoSync(syncEngine))
   );
 
   // 自動同期を無効化
   context.subscriptions.push(
-    vscode.commands.registerCommand('docsync.disable', () => disableAutoSync(syncEngine))
+    vscode.commands.registerCommand('jjj.disable', () => disableAutoSync(syncEngine))
   );
 
   logger.info('Commands registered successfully');

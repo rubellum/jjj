@@ -6,7 +6,7 @@ export class NotificationManager {
    * 情報通知を表示
    */
   info(message: string): void {
-    const fullMessage = `DocSync: ${message}`;
+    const fullMessage = `JJJ: ${message}`;
     vscode.window.showInformationMessage(fullMessage);
     logger.info(message);
   }
@@ -15,7 +15,7 @@ export class NotificationManager {
    * 警告通知を表示
    */
   warn(message: string, ...actions: string[]): Thenable<string | undefined> {
-    const fullMessage = `DocSync: ${message}`;
+    const fullMessage = `JJJ: ${message}`;
     logger.warn(message);
     return vscode.window.showWarningMessage(fullMessage, ...actions);
   }
@@ -24,7 +24,7 @@ export class NotificationManager {
    * エラー通知を表示
    */
   error(message: string, error?: Error): void {
-    const fullMessage = `DocSync: ${message}`;
+    const fullMessage = `JJJ: ${message}`;
     vscode.window.showErrorMessage(fullMessage);
     logger.error(message, error);
   }

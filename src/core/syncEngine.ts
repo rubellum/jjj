@@ -124,14 +124,21 @@ export class SyncEngine {
     await this.acquireLock();
 
     try {
+      // Step 0: 変更があるかチェック
+      const hasChanges = await this.jjManager.hasUncommittedChanges();
+
+      if (!hasChanges) {
+        // 変更がない場合はコミット・プッシュをスキップ
+        logger.info('No uncommitted changes found. Skipping manual sync');
+        this.statusBar.showTemporary('変更なし', CONSTANTS.STATUS_DISPLAY_DURATION);
+        return;
+      }
+
       this.statusBar.setState('同期中');
 
-      // Step 1: 未コミット変更があればコミット
-      const hasChanges = await this.jjManager.hasUncommittedChanges();
-      if (hasChanges) {
-        const message = this.generateCommitMessage();
-        await this.jjManager.commit(message);
-      }
+      // Step 1: コミット
+      const message = this.generateCommitMessage();
+      await this.jjManager.commit(message);
 
       // Step 2: リモートから取得
       await this.jjManager.fetch();
@@ -142,9 +149,7 @@ export class SyncEngine {
       }
 
       // Step 3: プッシュ
-      if (hasChanges) {
-        await this.jjManager.push();
-      }
+      await this.jjManager.push();
 
       this.statusBar.showTemporary('同期完了', CONSTANTS.STATUS_DISPLAY_DURATION);
       this.notifications.syncComplete();

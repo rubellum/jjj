@@ -19,7 +19,7 @@ let autoPullService: AutoPullService;
  * 拡張機能のアクティベーション
  */
 export async function activate(context: vscode.ExtensionContext) {
-  logger.info('DocSync extension is activating');
+  logger.info('Jujutsu Journaling extension is activating');
 
   try {
     // UI管理を初期化
@@ -86,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // クリーンアップを登録
     context.subscriptions.push({
       dispose: () => {
-        logger.info('Disposing DocSync resources');
+        logger.info('Disposing JJJ resources');
         syncEngine.dispose();
         statusBar.dispose();
         fileWatcher.dispose();
@@ -95,11 +95,11 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     });
 
-    logger.info('DocSync extension activated successfully');
+    logger.info('Jujutsu Journaling extension activated successfully');
 
   } catch (error) {
-    logger.error('Failed to activate DocSync extension', error as Error);
-    vscode.window.showErrorMessage('DocSync: 拡張機能の起動に失敗しました');
+    logger.error('Failed to activate JJJ extension', error as Error);
+    vscode.window.showErrorMessage('JJJ: 拡張機能の起動に失敗しました');
   }
 }
 
@@ -107,11 +107,11 @@ export async function activate(context: vscode.ExtensionContext) {
  * 拡張機能の非アクティベーション
  */
 export function deactivate() {
-  logger.info('DocSync extension is deactivating');
+  logger.info('Jujutsu Journaling extension is deactivating');
 
   if (syncEngine) {
     syncEngine.stopAutoSync();
   }
 
-  logger.info('DocSync extension deactivated');
+  logger.info('Jujutsu Journaling extension deactivated');
 }

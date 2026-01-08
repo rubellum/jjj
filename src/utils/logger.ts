@@ -4,7 +4,7 @@ class Logger {
   private outputChannel: vscode.OutputChannel;
 
   constructor() {
-    this.outputChannel = vscode.window.createOutputChannel('DocSync');
+    this.outputChannel = vscode.window.createOutputChannel('Jujutsu Journaling');
   }
 
   info(message: string): void {
