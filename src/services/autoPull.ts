@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import { JJManager } from '../core/jjManager';
 import { ConflictDetector } from '../core/conflictDetector';
 import { StatusBarManager } from '../ui/statusBar';
@@ -36,6 +37,9 @@ export class AutoPullService {
       // Step 3: マージ
       await this.jjManager.merge();
 
+      // コンフリクトビューを更新
+      vscode.commands.executeCommand('jjj.refreshConflicts');
+
       this.statusBar.setState('有効');
       logger.info('Auto-pull completed successfully');
 
@@ -53,10 +57,11 @@ export class AutoPullService {
     if (isConflictError(error)) {
       logger.warn('Conflict detected during auto-pull');
 
-      // TODO: コンフリクトファイルの実際の数を取得
-      // 現時点では簡易的に1件として通知
+      // コンフリクトビューを更新
+      vscode.commands.executeCommand('jjj.refreshConflicts');
+
       this.statusBar.setState('同期完了（コンフリクトあり）');
-      this.notifications.conflictDetected(1);
+      // ConflictTreeProviderが自動更新されるため、通知は省略
       return;
     }
 

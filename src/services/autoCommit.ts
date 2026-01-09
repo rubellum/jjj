@@ -83,6 +83,9 @@ export class AutoCommitService {
       this.changeQueue.clear();
       this.retryCount = 0;
 
+      // 履歴ビューを更新
+      vscode.commands.executeCommand('jjj.refreshHistory');
+
       this.statusBar.showTemporary('同期完了', CONSTANTS.STATUS_DISPLAY_DURATION);
       this.statusBar.setState('有効');
 
@@ -150,8 +153,13 @@ export class AutoCommitService {
 
         this.changeQueue.clear();
         this.retryCount = 0;
+
+        // ビューを更新
+        vscode.commands.executeCommand('jjj.refreshConflicts');
+        vscode.commands.executeCommand('jjj.refreshHistory');
+
         this.statusBar.setState('同期完了（コンフリクトあり）');
-        this.notifications.conflictDetected(1); // TODO: 実際のコンフリクト数を取得
+        // ConflictTreeProviderが自動更新されるため、通知は省略
       } catch (conflictError) {
         logger.error('Failed to commit with conflict', conflictError as Error);
         this.statusBar.setState('オフライン');

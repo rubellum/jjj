@@ -7,6 +7,9 @@ import { AutoCommitService } from './services/autoCommit';
 import { AutoPullService } from './services/autoPull';
 import { registerCommands } from './commands';
 import { logger } from './utils/logger';
+import { ConflictTreeDataProvider } from './ui/conflictTreeView';
+import { HistoryTreeDataProvider } from './ui/historyTreeView';
+import { registerTreeViewCommands } from './commands/treeViewCommands';
 
 let syncEngine: SyncEngine;
 let statusBar: StatusBarManager;
@@ -14,6 +17,8 @@ let notifications: NotificationManager;
 let fileWatcher: FileWatcher;
 let autoCommitService: AutoCommitService;
 let autoPullService: AutoPullService;
+let conflictTreeProvider: ConflictTreeDataProvider;
+let historyTreeProvider: HistoryTreeDataProvider;
 
 /**
  * 拡張機能のアクティベーション
@@ -80,20 +85,55 @@ export async function activate(context: vscode.ExtensionContext) {
     // AutoPullコールバックを設定（UC-03）
     syncEngine.setAutoPullCallback(() => autoPullService.pull());
 
+    // TreeViewプロバイダーを初期化
+    conflictTreeProvider = new ConflictTreeDataProvider(
+      jjManager,
+      conflictDetector,
+      workspacePath
+    );
+
+    historyTreeProvider = new HistoryTreeDataProvider(jjManager);
+
+    // TreeViewを登録
+    const conflictTreeView = vscode.window.createTreeView('jjj.conflictView', {
+      treeDataProvider: conflictTreeProvider,
+      showCollapseAll: false
+    });
+
+    const historyTreeView = vscode.window.createTreeView('jjj.historyView', {
+      treeDataProvider: historyTreeProvider,
+      showCollapseAll: false
+    });
+
+    // コンテキスト変数を設定
+    vscode.commands.executeCommand('setContext', 'jjj.active', true);
+
+    // TreeViewコマンドを登録
+    registerTreeViewCommands(context, conflictTreeProvider, historyTreeProvider, jjManager);
+
+    // 初期データを読み込み
+    await conflictTreeProvider.updateConflicts();
+    await historyTreeProvider.reset();
+
     // コマンドを登録（UC-04）
     registerCommands(context, syncEngine);
 
     // クリーンアップを登録
-    context.subscriptions.push({
-      dispose: () => {
-        logger.info('Disposing JJJ resources');
-        syncEngine.dispose();
-        statusBar.dispose();
-        fileWatcher.dispose();
-        autoCommitService.dispose();
-        logger.dispose();
+    context.subscriptions.push(
+      conflictTreeView,
+      historyTreeView,
+      {
+        dispose: () => {
+          logger.info('Disposing JJJ resources');
+          syncEngine.dispose();
+          statusBar.dispose();
+          fileWatcher.dispose();
+          autoCommitService.dispose();
+          vscode.commands.executeCommand('setContext', 'jjj.active', false);
+          logger.dispose();
+        }
       }
-    });
+    );
 
     logger.info('Jujutsu Journaling extension activated successfully');
 

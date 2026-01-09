@@ -36,3 +36,25 @@ export interface SyncConfig {
   syncIntervalMin: number;
   syncIntervalMax: number;
 }
+
+/**
+ * コンフリクトファイル情報
+ */
+export interface ConflictFile {
+  filePath: string;          // 絶対パス
+  relativePath: string;      // ワークスペース相対パス
+  conflictCount: number;     // コンフリクト箇所数
+  conflicts: ConflictInfo[]; // 詳細な位置情報
+}
+
+/**
+ * コミット情報
+ */
+export interface CommitInfo {
+  commitId: string;          // フルコミットID
+  shortCommitId: string;     // 短縮コミットID（8文字）
+  author: string;            // 作者名
+  timestamp: Date;           // コミット日時
+  description: string;       // コミットメッセージ
+  changedFiles: string[];    // 変更ファイルリスト
+}

@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { JJError } from '../types';
+import { JJError, CommitInfo } from '../types';
 import { parseJJError } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { CONSTANTS } from '../utils/constants';
@@ -217,6 +217,147 @@ export class JJManager {
       await this.runCommand('jj rebase -d main@origin');
       logger.info('Merged remote changes successfully');
     } catch (error) {
+      throw parseJJError(error);
+    }
+  }
+
+  /**
+   * コンフリクト状態のファイル一覧を取得
+   */
+  async getConflictedFiles(): Promise<string[]> {
+    try {
+      const output = await this.runCommand('jj status');
+      const lines = output.split('\n');
+      const conflictedFiles: string[] = [];
+
+      for (const line of lines) {
+        // "conflict" を含む行からファイルパスを抽出
+        if (line.includes('conflict') || line.includes('Conflict')) {
+          const match = line.match(/conflict\s+(.+)$/);
+          if (match) {
+            const relativePath = match[1].trim();
+            const absolutePath = path.join(this.workspacePath, relativePath);
+            conflictedFiles.push(absolutePath);
+          }
+        }
+      }
+
+      logger.info(`Found ${conflictedFiles.length} conflicted files`);
+      return conflictedFiles;
+    } catch (error) {
+      logger.error('Failed to get conflicted files', error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * コミット履歴を取得（ページネーション対応）
+   * @param limit 取得件数（デフォルト: 20）
+   * @param offset スキップ件数（デフォルト: 0）
+   */
+  async getCommitHistory(limit: number = 20, offset: number = 0): Promise<CommitInfo[]> {
+    try {
+      // jj logでタブ区切りの情報を取得
+      const template = 'commit_id ++ "\\t" ++ author.name() ++ "\\t" ++ author.timestamp() ++ "\\t" ++ description ++ "\\n"';
+      const command = `jj log --no-graph --limit ${limit + offset} -T '${template}'`;
+      const output = await this.runCommand(command);
+
+      const lines = output.trim().split('\n').slice(offset);
+      const commits: CommitInfo[] = [];
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        const [commitId, author, timestamp, ...descParts] = line.split('\t');
+        const description = descParts.join('\t').trim();
+
+        if (!description || description === '(no description set)') {
+          continue;
+        }
+
+        commits.push({
+          commitId: commitId.trim(),
+          shortCommitId: commitId.trim().substring(0, 8),
+          author: author.trim(),
+          timestamp: new Date(timestamp.trim()),
+          description: description,
+          changedFiles: []
+        });
+      }
+
+      logger.info(`Retrieved ${commits.length} commits from history`);
+      return commits;
+    } catch (error) {
+      logger.error('Failed to get commit history', error as Error);
+      throw parseJJError(error);
+    }
+  }
+
+  /**
+   * 特定のコミットで変更されたファイルを取得
+   * @param commitId コミットID
+   */
+  async getChangedFiles(commitId: string): Promise<string[]> {
+    try {
+      const command = `jj diff -r ${commitId} --summary`;
+      const output = await this.runCommand(command);
+
+      const lines = output.trim().split('\n');
+      const changedFiles: string[] = [];
+
+      for (const line of lines) {
+        // "M  path/to/file.md" 形式から抽出
+        const match = line.match(/^[MAD]\s+(.+)$/);
+        if (match) {
+          changedFiles.push(match[1].trim());
+        }
+      }
+
+      return changedFiles;
+    } catch (error) {
+      logger.warn(`Failed to get changed files for commit ${commitId}`, error as Error);
+      return [];
+    }
+  }
+
+  /**
+   * 特定ファイルのコミット履歴を取得
+   * @param filePath ファイルパス（ワークスペース相対）
+   * @param limit 取得件数
+   */
+  async getFileHistory(filePath: string, limit: number = 20): Promise<CommitInfo[]> {
+    try {
+      const template = 'commit_id ++ "\\t" ++ author.name() ++ "\\t" ++ author.timestamp() ++ "\\t" ++ description ++ "\\n"';
+      const command = `jj log --no-graph --limit ${limit} -T '${template}' ${filePath}`;
+      const output = await this.runCommand(command);
+
+      const lines = output.trim().split('\n');
+      const commits: CommitInfo[] = [];
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        const [commitId, author, timestamp, ...descParts] = line.split('\t');
+        const description = descParts.join('\t').trim();
+
+        if (!description || description === '(no description set)') {
+          continue;
+        }
+
+        commits.push({
+          commitId: commitId.trim(),
+          shortCommitId: commitId.trim().substring(0, 8),
+          author: author.trim(),
+          timestamp: new Date(timestamp.trim()),
+          description: description,
+          changedFiles: [filePath]
+        });
+      }
+
+      logger.info(`Retrieved ${commits.length} commits for file ${filePath}`);
+      return commits;
+    } catch (error) {
+      logger.error(`Failed to get file history for ${filePath}`, error as Error);
       throw parseJJError(error);
     }
   }

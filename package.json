@@ -32,6 +32,29 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jjj-sidebar",
+          "title": "Jujutsu Journaling",
+          "icon": "$(git-commit)"
+        }
+      ]
+    },
+    "views": {
+      "jjj-sidebar": [
+        {
+          "id": "jjj.conflictView",
+          "name": "コンフリクト",
+          "when": "jjj.active"
+        },
+        {
+          "id": "jjj.historyView",
+          "name": "変更履歴",
+          "when": "jjj.active"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "jjj.toggleAutoSync",
@@ -49,8 +72,55 @@
       {
         "command": "jjj.disable",
         "title": "JJJ: 自動同期を無効化"
+      },
+      {
+        "command": "jjj.refreshConflicts",
+        "title": "JJJ: コンフリクトを更新",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "jjj.refreshHistory",
+        "title": "JJJ: 履歴を更新",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "jjj.openConflictFile",
+        "title": "JJJ: コンフリクトファイルを開く"
+      },
+      {
+        "command": "jjj.showCommitDetails",
+        "title": "JJJ: コミット詳細を表示"
+      },
+      {
+        "command": "jjj.loadMoreHistory",
+        "title": "JJJ: さらに読み込む"
+      },
+      {
+        "command": "jjj.showFileHistory",
+        "title": "JJJ: このファイルの履歴を表示"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "jjj.refreshConflicts",
+          "when": "view == jjj.conflictView",
+          "group": "navigation"
+        },
+        {
+          "command": "jjj.refreshHistory",
+          "when": "view == jjj.historyView",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "jjj.showFileHistory",
+          "when": "jjj.active",
+          "group": "jjj@1"
+        }
+      ]
+    },
     "configuration": {
       "title": "Jujutsu Journaling",
       "properties": {
