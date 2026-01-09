@@ -115,6 +115,10 @@ export async function activate(context: vscode.ExtensionContext) {
     await conflictTreeProvider.updateConflicts();
     await historyTreeProvider.reset();
 
+    // コンフリクトの有無をコンテキスト変数に設定
+    const hasConflicts = conflictTreeProvider.getConflictCount() > 0;
+    vscode.commands.executeCommand('setContext', 'jjj.hasConflicts', hasConflicts);
+
     // コマンドを登録（UC-04）
     registerCommands(context, syncEngine);
 

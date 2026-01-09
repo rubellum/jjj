@@ -98,6 +98,16 @@
       {
         "command": "jjj.showFileHistory",
         "title": "JJJ: このファイルの履歴を表示"
+      },
+      {
+        "command": "jjj.copyConflictPrompt",
+        "title": "JJJ: コンフリクト解消プロンプトをコピー",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "jjj.copyAllConflictsPrompt",
+        "title": "JJJ: 全コンフリクトのプロンプトをコピー",
+        "icon": "$(copy)"
       }
     ],
     "menus": {
@@ -108,9 +118,21 @@
           "group": "navigation"
         },
         {
+          "command": "jjj.copyAllConflictsPrompt",
+          "when": "view == jjj.conflictView && jjj.hasConflicts",
+          "group": "navigation"
+        },
+        {
           "command": "jjj.refreshHistory",
           "when": "view == jjj.historyView",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "jjj.copyConflictPrompt",
+          "when": "view == jjj.conflictView && viewItem == conflictFile",
+          "group": "inline@1"
         }
       ],
       "editor/context": [

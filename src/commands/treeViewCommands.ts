@@ -4,6 +4,7 @@ import { ConflictTreeDataProvider } from '../ui/conflictTreeView';
 import { HistoryTreeDataProvider } from '../ui/historyTreeView';
 import { JJManager } from '../core/jjManager';
 import { logger } from '../utils/logger';
+import { generateConflictResolutionPrompt, generateMultipleConflictPrompt } from '../utils/conflictPrompt';
 
 export async function openConflictFile(conflictFile: ConflictFile): Promise<void> {
   try {
@@ -125,6 +126,57 @@ export async function refreshHistory(historyProvider: HistoryTreeDataProvider): 
 }
 
 /**
+ * コンフリクト解消プロンプトをクリップボードにコピー
+ */
+export async function copyConflictPrompt(conflictFile: ConflictFile): Promise<void> {
+  try {
+    const prompt = generateConflictResolutionPrompt(conflictFile);
+
+    // クリップボードにコピー
+    await vscode.env.clipboard.writeText(prompt);
+
+    // 成功通知
+    vscode.window.showInformationMessage(
+      `JJJ: プロンプトをコピーしました (${conflictFile.relativePath})`
+    );
+
+    logger.info(`Copied conflict resolution prompt for: ${conflictFile.relativePath}`);
+  } catch (error) {
+    logger.error('Failed to copy conflict prompt', error as Error);
+    vscode.window.showErrorMessage('JJJ: プロンプトのコピーに失敗しました');
+  }
+}
+
+/**
+ * 全コンフリクトのプロンプトをコピー
+ */
+export async function copyAllConflictsPrompt(conflictProvider: ConflictTreeDataProvider): Promise<void> {
+  try {
+    const conflictCount = conflictProvider.getConflictCount();
+
+    if (conflictCount === 0) {
+      vscode.window.showInformationMessage('JJJ: コンフリクトはありません');
+      return;
+    }
+
+    // ConflictTreeDataProviderからconflictFilesを取得
+    const conflictFiles = conflictProvider.getConflictFiles();
+    const prompt = generateMultipleConflictPrompt(conflictFiles);
+
+    await vscode.env.clipboard.writeText(prompt);
+
+    vscode.window.showInformationMessage(
+      `JJJ: 全コンフリクトのプロンプトをコピーしました (${conflictCount}件)`
+    );
+
+    logger.info(`Copied prompt for all ${conflictCount} conflicts`);
+  } catch (error) {
+    logger.error('Failed to copy all conflicts prompt', error as Error);
+    vscode.window.showErrorMessage('JJJ: プロンプトのコピーに失敗しました');
+  }
+}
+
+/**
  * TreeViewコマンドを登録
  */
 export function registerTreeViewCommands(
@@ -141,7 +193,11 @@ export function registerTreeViewCommands(
     vscode.commands.registerCommand('jjj.loadMoreHistory', () => loadMoreHistory(historyProvider)),
     vscode.commands.registerCommand('jjj.showFileHistory', () => showFileHistory(jjManager)),
     vscode.commands.registerCommand('jjj.refreshConflicts', () => refreshConflicts(conflictProvider)),
-    vscode.commands.registerCommand('jjj.refreshHistory', () => refreshHistory(historyProvider))
+    vscode.commands.registerCommand('jjj.refreshHistory', () => refreshHistory(historyProvider)),
+    vscode.commands.registerCommand('jjj.copyConflictPrompt', copyConflictPrompt),
+    vscode.commands.registerCommand('jjj.copyAllConflictsPrompt', () =>
+      copyAllConflictsPrompt(conflictProvider)
+    )
   );
 
   logger.info('Tree view commands registered successfully');

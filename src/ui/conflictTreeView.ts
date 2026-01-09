@@ -43,6 +43,13 @@ export class ConflictTreeDataProvider implements vscode.TreeDataProvider<vscode.
 
       logger.info(`Updated conflict list: ${this.conflictFiles.length} files`);
       this.refresh();
+
+      // コンテキスト変数を更新
+      vscode.commands.executeCommand(
+        'setContext',
+        'jjj.hasConflicts',
+        this.conflictFiles.length > 0
+      );
     } catch (error) {
       logger.error('Failed to update conflicts', error as Error);
     }
@@ -64,5 +71,12 @@ export class ConflictTreeDataProvider implements vscode.TreeDataProvider<vscode.
 
   getConflictCount(): number {
     return this.conflictFiles.length;
+  }
+
+  /**
+   * コンフリクトファイル一覧を取得
+   */
+  getConflictFiles(): ConflictFile[] {
+    return this.conflictFiles;
   }
 }
