@@ -27,6 +27,15 @@ export class AutoCommitService {
    * UC-02: ファイル変更をキューに追加（デバウンス方式）
    */
   queueChange(file: vscode.Uri): void {
+    // 自動同期が無効の場合は処理をスキップ
+    const config = vscode.workspace.getConfiguration('jjj');
+    const autoSyncEnabled = config.get<boolean>('autoSyncEnabled', false);
+
+    if (!autoSyncEnabled) {
+      logger.debug(`Auto-sync is disabled, skipping file: ${file.fsPath}`);
+      return;
+    }
+
     const filePath = file.fsPath;
     this.changeQueue.add(filePath);
     logger.debug(`File queued for commit: ${filePath} (queue size: ${this.changeQueue.size})`);
@@ -49,6 +58,16 @@ export class AutoCommitService {
    */
   private async processQueue(): Promise<void> {
     if (this.isProcessing || this.changeQueue.size === 0) {
+      return;
+    }
+
+    // 自動同期が無効の場合は処理をスキップ
+    const config = vscode.workspace.getConfiguration('jjj');
+    const autoSyncEnabled = config.get<boolean>('autoSyncEnabled', false);
+
+    if (!autoSyncEnabled) {
+      logger.info('Auto-sync is disabled, clearing queue without processing');
+      this.changeQueue.clear();
       return;
     }
 
