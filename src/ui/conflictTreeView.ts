@@ -5,6 +5,7 @@ import { ConflictDetector } from '../core/conflictDetector';
 import { JJManager } from '../core/jjManager';
 import { logger } from '../utils/logger';
 import { ConflictFileTreeItem, ConflictInfoTreeItem } from './treeItems';
+import { localize } from '../utils/localize';
 
 export class ConflictTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
@@ -62,7 +63,7 @@ export class ConflictTreeDataProvider implements vscode.TreeDataProvider<vscode.
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     if (!element) {
       if (this.conflictFiles.length === 0) {
-        return [new ConflictInfoTreeItem('コンフリクトはありません', '')];
+        return [new ConflictInfoTreeItem(localize('tree.noConflicts', 'No conflicts'), '')];
       }
       return this.conflictFiles.map(cf => new ConflictFileTreeItem(cf));
     }

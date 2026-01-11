@@ -40,7 +40,7 @@ export class AutoPullService {
       // コンフリクトビューを更新
       vscode.commands.executeCommand('jjj.refreshConflicts');
 
-      this.statusBar.setState('有効');
+      this.statusBar.setState('enabled');
       logger.info('Auto-pull completed successfully');
 
     } catch (error: any) {
@@ -60,7 +60,7 @@ export class AutoPullService {
       // コンフリクトビューを更新
       vscode.commands.executeCommand('jjj.refreshConflicts');
 
-      this.statusBar.setState('同期完了（コンフリクトあり）');
+      this.statusBar.setState('syncCompleteWithConflicts');
       // ConflictTreeProviderが自動更新されるため、通知は省略
       return;
     }
@@ -68,7 +68,7 @@ export class AutoPullService {
     // ネットワークエラー
     if (error.type === 'NETWORK_ERROR') {
       logger.warn('Network error during auto-pull');
-      this.statusBar.setState('オフライン');
+      this.statusBar.setState('offline');
       return;
     }
 

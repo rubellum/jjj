@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { logger } from '../utils/logger';
+import { localize } from '../utils/localize';
 
 export class NotificationManager {
   /**
@@ -33,7 +34,7 @@ export class NotificationManager {
    * コンフリクト通知を表示
    */
   conflictDetected(count: number): void {
-    const message = `${count}件のコンフリクトがあります`;
+    const message = localize('notification.conflicts', '{0} conflicts detected', count.toString());
     this.warn(message);
   }
 
@@ -49,14 +50,14 @@ export class NotificationManager {
    * jj未インストール通知を表示
    */
   jjNotFound(): void {
-    this.error('jujutsu (jj) がインストールされていません。https://github.com/martinvonz/jj#installation を参照してインストールしてください。');
+    this.error(localize('notification.jjNotFound', 'jujutsu (jj) is not installed. Please visit https://github.com/martinvonz/jj#installation to install it.'));
   }
 
   /**
    * リモート未設定通知を表示
    */
   noRemote(): void {
-    this.warn('リモートリポジトリが設定されていません。ローカルのみの変更追跡が有効です。');
+    this.warn(localize('notification.noRemote', 'No remote repository configured. Local change tracking is enabled.'));
   }
 
   /**
@@ -64,9 +65,9 @@ export class NotificationManager {
    */
   networkError(retryCount?: number): void {
     if (retryCount !== undefined) {
-      this.warn(`ネットワークエラーが発生しました。再試行中... (${retryCount}/3)`);
+      this.warn(localize('notification.networkErrorRetry', 'Network error occurred. Retrying... ({0}/3)', retryCount.toString()));
     } else {
-      this.error('ネットワークエラーが発生しました。接続を確認してください。');
+      this.error(localize('notification.networkError', 'Network error occurred. Please check your connection.'));
     }
   }
 
@@ -74,6 +75,6 @@ export class NotificationManager {
    * 認証エラー通知を表示
    */
   authError(): void {
-    this.error('認証に失敗しました。リモートリポジトリの認証情報を確認してください。');
+    this.error(localize('notification.authError', 'Authentication failed. Please check your remote repository credentials.'));
   }
 }

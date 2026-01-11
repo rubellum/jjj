@@ -1,7 +1,7 @@
 {
   "name": "jjj",
-  "displayName": "Jujutsu Journaling",
-  "description": "jujutsuで文書の変更履歴を自動記録する拡張機能",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.1.2",
   "publisher": "rubellum",
   "license": "MIT",
@@ -45,12 +45,12 @@
       "jjj-sidebar": [
         {
           "id": "jjj.conflictView",
-          "name": "コンフリクト",
+          "name": "%view.conflicts%",
           "when": "jjj.active"
         },
         {
           "id": "jjj.historyView",
-          "name": "変更履歴",
+          "name": "%view.history%",
           "when": "jjj.active"
         }
       ]
@@ -58,55 +58,55 @@
     "commands": [
       {
         "command": "jjj.toggleAutoSync",
-        "title": "JJJ: 自動同期を切り替え"
+        "title": "%command.toggleAutoSync%"
       },
       {
         "command": "jjj.manualSync",
-        "title": "JJJ: 今すぐ同期",
+        "title": "%command.manualSync%",
         "icon": "$(sync)"
       },
       {
         "command": "jjj.enable",
-        "title": "JJJ: 自動同期を有効化"
+        "title": "%command.enable%"
       },
       {
         "command": "jjj.disable",
-        "title": "JJJ: 自動同期を無効化"
+        "title": "%command.disable%"
       },
       {
         "command": "jjj.refreshConflicts",
-        "title": "JJJ: コンフリクトを更新",
+        "title": "%command.refreshConflicts%",
         "icon": "$(refresh)"
       },
       {
         "command": "jjj.refreshHistory",
-        "title": "JJJ: 履歴を更新",
+        "title": "%command.refreshHistory%",
         "icon": "$(refresh)"
       },
       {
         "command": "jjj.openConflictFile",
-        "title": "JJJ: コンフリクトファイルを開く"
+        "title": "%command.openConflictFile%"
       },
       {
         "command": "jjj.showCommitDetails",
-        "title": "JJJ: コミット詳細を表示"
+        "title": "%command.showCommitDetails%"
       },
       {
         "command": "jjj.loadMoreHistory",
-        "title": "JJJ: さらに読み込む"
+        "title": "%command.loadMoreHistory%"
       },
       {
         "command": "jjj.showFileHistory",
-        "title": "JJJ: このファイルの履歴を表示"
+        "title": "%command.showFileHistory%"
       },
       {
         "command": "jjj.copyConflictPrompt",
-        "title": "JJJ: コンフリクト解消プロンプトをコピー",
+        "title": "%command.copyConflictPrompt%",
         "icon": "$(copy)"
       },
       {
         "command": "jjj.copyAllConflictsPrompt",
-        "title": "JJJ: 全コンフリクトのプロンプトをコピー",
+        "title": "%command.copyAllConflictsPrompt%",
         "icon": "$(copy)"
       }
     ],
@@ -144,12 +144,12 @@
       ]
     },
     "configuration": {
-      "title": "Jujutsu Journaling",
+      "title": "%config.title%",
       "properties": {
         "jjj.autoSyncEnabled": {
           "type": "boolean",
           "default": false,
-          "description": "自動同期を有効化（リポジトリごとに設定を推奨）"
+          "description": "%config.autoSyncEnabled%"
         }
       }
     }
@@ -170,5 +170,8 @@
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "vscode-nls": "^5.2.0"
   }
 }

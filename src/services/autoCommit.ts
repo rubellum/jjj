@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { CONSTANTS } from '../utils/constants';
 import { isNetworkError, isRemoteChangedError, isConflictError } from '../utils/errorHandler';
 import { JJError } from '../types';
+import { localize } from '../utils/localize';
 
 export class AutoCommitService {
   private changeQueue: Set<string> = new Set();
@@ -87,7 +88,7 @@ export class AutoCommitService {
         return;
       }
 
-      this.statusBar.setState('同期中');
+      this.statusBar.setState('syncing');
 
       // Step 1: コミット
       const message = this.generateCommitMessage();
@@ -105,8 +106,8 @@ export class AutoCommitService {
       // 履歴ビューを更新
       vscode.commands.executeCommand('jjj.refreshHistory');
 
-      this.statusBar.showTemporary('同期完了', CONSTANTS.STATUS_DISPLAY_DURATION);
-      this.statusBar.setState('有効');
+      this.statusBar.showTemporary(localize('status.syncComplete', 'Sync Complete'), CONSTANTS.STATUS_DISPLAY_DURATION);
+      this.statusBar.setState('enabled');
 
     } catch (error: any) {
       logger.error('Auto-commit/push failed', error);
@@ -136,7 +137,7 @@ export class AutoCommitService {
       } else {
         logger.error('Max retry count reached');
         this.notifications.networkError();
-        this.statusBar.setState('オフライン');
+        this.statusBar.setState('offline');
         this.changeQueue.clear();
         this.retryCount = 0;
       }
@@ -152,11 +153,11 @@ export class AutoCommitService {
         await this.jjManager.push();
         this.changeQueue.clear();
         this.retryCount = 0;
-        this.statusBar.showTemporary('同期完了', CONSTANTS.STATUS_DISPLAY_DURATION);
-        this.statusBar.setState('有効');
+        this.statusBar.showTemporary(localize('status.syncComplete', 'Sync Complete'), CONSTANTS.STATUS_DISPLAY_DURATION);
+        this.statusBar.setState('enabled');
       } catch (pullError) {
         logger.error('Failed to pull and retry push', pullError as Error);
-        this.statusBar.setState('オフライン');
+        this.statusBar.setState('offline');
       }
       return;
     }
@@ -177,11 +178,11 @@ export class AutoCommitService {
         vscode.commands.executeCommand('jjj.refreshConflicts');
         vscode.commands.executeCommand('jjj.refreshHistory');
 
-        this.statusBar.setState('同期完了（コンフリクトあり）');
+        this.statusBar.setState('syncCompleteWithConflicts');
         // ConflictTreeProviderが自動更新されるため、通知は省略
       } catch (conflictError) {
         logger.error('Failed to commit with conflict', conflictError as Error);
-        this.statusBar.setState('オフライン');
+        this.statusBar.setState('offline');
       }
       return;
     }

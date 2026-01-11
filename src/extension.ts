@@ -10,6 +10,7 @@ import { logger } from './utils/logger';
 import { ConflictTreeDataProvider } from './ui/conflictTreeView';
 import { HistoryTreeDataProvider } from './ui/historyTreeView';
 import { registerTreeViewCommands } from './commands/treeViewCommands';
+import { localize } from './utils/localize';
 
 let syncEngine: SyncEngine;
 let statusBar: StatusBarManager;
@@ -38,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
       logger.info('No workspace folder found, extension inactive');
-      statusBar.setState('対象外');
+      statusBar.setState(localize('status.notApplicable', 'Not Applicable'));
       return;
     }
 
@@ -143,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   } catch (error) {
     logger.error('Failed to activate JJJ extension', error as Error);
-    vscode.window.showErrorMessage('JJJ: 拡張機能の起動に失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.activationFailed', 'Failed to activate extension')}`);
   }
 }
 

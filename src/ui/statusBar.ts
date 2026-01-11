@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import { SyncState } from '../types';
 import { CONSTANTS } from '../utils/constants';
 import { logger } from '../utils/logger';
+import { localize } from '../utils/localize';
 
 export class StatusBarManager {
   private statusBarItem: vscode.StatusBarItem;
-  private currentState: SyncState = '対象外';
+  private currentState: SyncState = 'notApplicable';
   private temporaryTimer?: NodeJS.Timeout;
   private autoSyncEnabled: boolean = false;
 
@@ -60,67 +61,68 @@ export class StatusBarManager {
    */
   private updateDisplay(state: SyncState): void {
     // 自動同期がONの時は背景色を警告色に設定
-    if (this.autoSyncEnabled && state !== '対象外') {
+    if (this.autoSyncEnabled && state !== 'notApplicable') {
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     } else {
       this.statusBarItem.backgroundColor = undefined;
     }
 
     switch (state) {
-      case '対象外':
-        this.statusBarItem.text = '$(circle-slash) JJJ: 対象外';
+      case 'notApplicable':
+        this.statusBarItem.text = `$(circle-slash) JJJ: ${localize('status.notApplicable', 'Not Applicable')}`;
         this.statusBarItem.command = undefined;
-        this.statusBarItem.tooltip = 'Gitリポジトリが検出されませんでした';
+        this.statusBarItem.tooltip = localize('tooltip.noGitRepo', 'No Git repository detected');
         this.statusBarItem.backgroundColor = undefined;
         break;
 
-      case '有効':
+      case 'enabled':
         if (this.autoSyncEnabled) {
           this.statusBarItem.text = '$(sync) JJJ: ON';
-          this.statusBarItem.tooltip = '自動同期が有効です。クリックして無効化';
+          this.statusBarItem.tooltip = localize('tooltip.autoSyncEnabled', 'Auto-sync is enabled. Click to disable');
         } else {
           this.statusBarItem.text = '$(circle-slash) JJJ: OFF';
-          this.statusBarItem.tooltip = '自動同期が無効です。クリックして有効化';
+          this.statusBarItem.tooltip = localize('tooltip.autoSyncDisabled', 'Auto-sync is disabled. Click to enable');
         }
         this.statusBarItem.command = 'jjj.toggleAutoSync';
         break;
 
-      case 'オフライン':
+      case 'offline':
         if (this.autoSyncEnabled) {
-          this.statusBarItem.text = '$(cloud-offline) JJJ: ON (オフライン)';
-          this.statusBarItem.tooltip = 'リモートに接続できません。クリックして無効化';
+          this.statusBarItem.text = `$(cloud-offline) JJJ: ON (${localize('status.offline', 'Offline')})`;
+          this.statusBarItem.tooltip = localize('tooltip.remoteUnavailable', 'Cannot connect to remote. Click to {0}', localize('tooltip.disable', 'disable'));
         } else {
-          this.statusBarItem.text = '$(cloud-offline) JJJ: OFF (オフライン)';
-          this.statusBarItem.tooltip = 'リモートに接続できません。クリックして有効化';
+          this.statusBarItem.text = `$(cloud-offline) JJJ: OFF (${localize('status.offline', 'Offline')})`;
+          this.statusBarItem.tooltip = localize('tooltip.remoteUnavailable', 'Cannot connect to remote. Click to {0}', localize('tooltip.enable', 'enable'));
         }
         this.statusBarItem.command = 'jjj.toggleAutoSync';
         break;
 
-      case '同期中':
-        this.statusBarItem.text = '$(sync~spin) JJJ: 同期中...';
+      case 'syncing':
+        this.statusBarItem.text = `$(sync~spin) JJJ: ${localize('status.syncing', 'Syncing...')}`;
         this.statusBarItem.command = undefined;
-        this.statusBarItem.tooltip = '同期処理を実行中です';
+        this.statusBarItem.tooltip = localize('tooltip.syncing', 'Sync in progress');
         break;
 
-      case '同期完了':
-        this.statusBarItem.text = '$(check) JJJ: 同期完了';
+      case 'syncComplete':
+        this.statusBarItem.text = `$(check) JJJ: ${localize('status.syncComplete', 'Sync Complete')}`;
         this.statusBarItem.command = 'jjj.toggleAutoSync';
-        this.statusBarItem.tooltip = this.autoSyncEnabled ? '同期が完了しました。クリックして無効化' : '同期が完了しました。クリックして有効化';
+        this.statusBarItem.tooltip = localize('tooltip.syncComplete', 'Sync completed. Click to {0}',
+          this.autoSyncEnabled ? localize('tooltip.disable', 'disable') : localize('tooltip.enable', 'enable'));
         break;
 
-      case '同期完了（コンフリクトあり）':
-        this.statusBarItem.text = '$(warning) JJJ: コンフリクト';
+      case 'syncCompleteWithConflicts':
+        this.statusBarItem.text = `$(warning) JJJ: ${localize('status.conflict', 'Conflict')}`;
         this.statusBarItem.command = 'jjj.toggleAutoSync';
-        this.statusBarItem.tooltip = 'コンフリクトがあります。手動で解消してください';
+        this.statusBarItem.tooltip = localize('tooltip.hasConflicts', 'Conflicts detected. Please resolve manually');
         break;
 
-      case 'ローカルのみ':
+      case 'localOnly':
         if (this.autoSyncEnabled) {
-          this.statusBarItem.text = '$(sync) JJJ: ON (ローカル)';
-          this.statusBarItem.tooltip = 'ローカルのみで同期中。クリックして無効化';
+          this.statusBarItem.text = `$(sync) JJJ: ON (${localize('status.localOnly', 'Local Only')})`;
+          this.statusBarItem.tooltip = localize('tooltip.noRemote', 'No remote repository configured. Click to {0}', localize('tooltip.disable', 'disable'));
         } else {
-          this.statusBarItem.text = '$(circle-slash) JJJ: OFF (ローカル)';
-          this.statusBarItem.tooltip = 'リモートリポジトリが設定されていません。クリックして有効化';
+          this.statusBarItem.text = `$(circle-slash) JJJ: OFF (${localize('status.localOnly', 'Local Only')})`;
+          this.statusBarItem.tooltip = localize('tooltip.noRemote', 'No remote repository configured. Click to {0}', localize('tooltip.enable', 'enable'));
         }
         this.statusBarItem.command = 'jjj.toggleAutoSync';
         break;

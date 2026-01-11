@@ -7,6 +7,7 @@ import { NotificationManager } from '../ui/notifications';
 import { SyncState, SyncConfig } from '../types';
 import { logger } from '../utils/logger';
 import { CONSTANTS } from '../utils/constants';
+import { localize } from '../utils/localize';
 
 export class SyncEngine {
   private jjManager?: JJManager;
@@ -41,7 +42,7 @@ export class SyncEngine {
       const isJJAvailable = await this.jjManager.isJJAvailable();
       if (!isJJAvailable) {
         logger.error('jj command not found');
-        this.statusBar.setState('対象外');
+        this.statusBar.setState('notApplicable');
         this.notifications.jjNotFound();
         return;
       }
@@ -50,7 +51,7 @@ export class SyncEngine {
       const hasGit = await this.jjManager.detectGitRepo();
       if (!hasGit) {
         logger.info('No Git repository detected');
-        this.statusBar.setState('対象外');
+        this.statusBar.setState('notApplicable');
         return;
       }
 
@@ -65,11 +66,11 @@ export class SyncEngine {
       const hasRemote = await this.jjManager.checkRemoteConnection();
       if (!hasRemote) {
         logger.warn('No remote repository configured');
-        this.statusBar.setState('ローカルのみ');
+        this.statusBar.setState('localOnly');
         this.notifications.noRemote();
         // ローカルのみでも同期は継続（リモート操作をスキップ）
       } else {
-        this.statusBar.setState('有効');
+        this.statusBar.setState('enabled');
       }
 
       // Step 5: 自動同期の状態を反映
@@ -137,11 +138,11 @@ export class SyncEngine {
       if (!hasChanges) {
         // 変更がない場合はコミット・プッシュをスキップ
         logger.info('No uncommitted changes found. Skipping manual sync');
-        this.statusBar.showTemporary('変更なし', CONSTANTS.STATUS_DISPLAY_DURATION);
+        this.statusBar.showTemporary(localize('status.noChanges', 'No Changes'), CONSTANTS.STATUS_DISPLAY_DURATION);
         return;
       }
 
-      this.statusBar.setState('同期中');
+      this.statusBar.setState('syncing');
 
       // Step 1: コミット
       const message = this.generateCommitMessage();
@@ -158,7 +159,7 @@ export class SyncEngine {
       // Step 3: プッシュ
       await this.jjManager.push();
 
-      this.statusBar.showTemporary('同期完了', CONSTANTS.STATUS_DISPLAY_DURATION);
+      this.statusBar.showTemporary(localize('status.syncComplete', 'Sync Complete'), CONSTANTS.STATUS_DISPLAY_DURATION);
       this.notifications.syncComplete();
 
     } catch (error: any) {
@@ -166,7 +167,7 @@ export class SyncEngine {
       this.handleSyncError(error);
     } finally {
       this.releaseLock();
-      this.statusBar.setState('有効');
+      this.statusBar.setState('enabled');
     }
   }
 
@@ -175,10 +176,10 @@ export class SyncEngine {
    */
   private handleSyncError(error: any): void {
     if (error.type === 'NETWORK_ERROR') {
-      this.statusBar.setState('オフライン');
+      this.statusBar.setState('offline');
       this.notifications.networkError();
     } else if (error.type === 'CONFLICT') {
-      this.statusBar.setState('同期完了（コンフリクトあり）');
+      this.statusBar.setState('syncCompleteWithConflicts');
     } else if (error.type === 'AUTH_ERROR') {
       this.notifications.authError();
     } else {

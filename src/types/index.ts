@@ -1,11 +1,11 @@
 export type SyncState =
-  | '対象外'
-  | '有効'
-  | 'オフライン'
-  | '同期中'
-  | '同期完了'
-  | '同期完了（コンフリクトあり）'
-  | 'ローカルのみ';
+  | 'notApplicable'
+  | 'enabled'
+  | 'offline'
+  | 'syncing'
+  | 'syncComplete'
+  | 'syncCompleteWithConflicts'
+  | 'localOnly';
 
 export type JJErrorType =
   | 'NETWORK_ERROR'

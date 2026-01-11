@@ -5,6 +5,7 @@ import { HistoryTreeDataProvider } from '../ui/historyTreeView';
 import { JJManager } from '../core/jjManager';
 import { logger } from '../utils/logger';
 import { generateConflictResolutionPrompt, generateMultipleConflictPrompt } from '../utils/conflictPrompt';
+import { localize } from '../utils/localize';
 
 export async function openConflictFile(conflictFile: ConflictFile): Promise<void> {
   try {
@@ -23,7 +24,7 @@ export async function openConflictFile(conflictFile: ConflictFile): Promise<void
     logger.info(`Opened conflict file: ${conflictFile.relativePath}`);
   } catch (error) {
     logger.error('Failed to open conflict file', error as Error);
-    vscode.window.showErrorMessage(`JJJ: ファイルを開けませんでした`);
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.fileOpenFailed', 'Failed to open file')}`);
   }
 }
 
@@ -31,17 +32,17 @@ export async function showCommitDetails(commit: CommitInfo): Promise<void> {
   try {
     const changedFilesText = commit.changedFiles.length > 0
       ? commit.changedFiles.map(f => `  • ${f}`).join('\n')
-      : '  (変更なし)';
+      : `  ${localize('tree.noChanges', '(No changes)')}`;
 
     const details = `
-コミット詳細
+${localize('tree.commitDetails', 'Commit Details')}
 ────────────────────
-ID: ${commit.shortCommitId}
-作者: ${commit.author}
-日時: ${commit.timestamp.toLocaleString('ja-JP')}
-メッセージ: ${commit.description}
+${localize('tree.commitId', 'ID')}: ${commit.shortCommitId}
+${localize('tree.author', 'Author')}: ${commit.author}
+${localize('tree.timestamp', 'Time')}: ${commit.timestamp.toLocaleString()}
+${localize('tree.message', 'Message')}: ${commit.description}
 
-変更ファイル:
+${localize('tree.changedFiles', 'Changed Files')}:
 ${changedFilesText}
     `.trim();
 
@@ -62,7 +63,7 @@ export async function loadMoreHistory(historyProvider: HistoryTreeDataProvider):
     await historyProvider.loadMore();
   } catch (error) {
     logger.error('Failed to load more history', error as Error);
-    vscode.window.showErrorMessage('JJJ: 履歴の読み込みに失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.historyLoadFailed', 'Failed to load history')}`);
   }
 }
 
@@ -70,7 +71,7 @@ export async function showFileHistory(jjManager: JJManager): Promise<void> {
   try {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showWarningMessage('JJJ: ファイルを開いてください');
+      vscode.window.showWarningMessage(`JJJ: ${localize('notification.openFileFirst', 'Please open a file')}`);
       return;
     }
 
@@ -81,19 +82,19 @@ export async function showFileHistory(jjManager: JJManager): Promise<void> {
     const commits = await jjManager.getFileHistory(relativePath, 20);
 
     if (commits.length === 0) {
-      vscode.window.showInformationMessage('JJJ: このファイルの履歴はありません');
+      vscode.window.showInformationMessage(`JJJ: ${localize('notification.noFileHistory', 'No history for this file')}`);
       return;
     }
 
     const items = commits.map(commit => ({
       label: `$(git-commit) ${commit.shortCommitId}`,
       description: commit.author,
-      detail: `${commit.timestamp.toLocaleString('ja-JP')} - ${commit.description}`,
+      detail: `${commit.timestamp.toLocaleString()} - ${commit.description}`,
       commit
     }));
 
     const selected = await vscode.window.showQuickPick(items, {
-      placeHolder: `${relativePath} の履歴`
+      placeHolder: localize('tree.fileHistoryTitle', '{0} History', relativePath)
     });
 
     if (selected) {
@@ -103,7 +104,7 @@ export async function showFileHistory(jjManager: JJManager): Promise<void> {
     logger.info(`Showed file history for: ${relativePath}`);
   } catch (error) {
     logger.error('Failed to show file history', error as Error);
-    vscode.window.showErrorMessage('JJJ: ファイル履歴の取得に失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.fileHistoryFailed', 'Failed to retrieve file history')}`);
   }
 }
 
@@ -112,7 +113,7 @@ export async function refreshConflicts(conflictProvider: ConflictTreeDataProvide
     await conflictProvider.updateConflicts();
   } catch (error) {
     logger.error('Failed to refresh conflicts', error as Error);
-    vscode.window.showErrorMessage('JJJ: コンフリクトの更新に失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.conflictRefreshFailed', 'Failed to refresh conflicts')}`);
   }
 }
 
@@ -121,7 +122,7 @@ export async function refreshHistory(historyProvider: HistoryTreeDataProvider): 
     await historyProvider.reset();
   } catch (error) {
     logger.error('Failed to refresh history', error as Error);
-    vscode.window.showErrorMessage('JJJ: 履歴の更新に失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.historyRefreshFailed', 'Failed to refresh history')}`);
   }
 }
 
@@ -137,13 +138,13 @@ export async function copyConflictPrompt(conflictFile: ConflictFile): Promise<vo
 
     // 成功通知
     vscode.window.showInformationMessage(
-      `JJJ: プロンプトをコピーしました (${conflictFile.relativePath})`
+      `JJJ: ${localize('notification.promptCopied', 'Prompt copied ({0})', conflictFile.relativePath)}`
     );
 
     logger.info(`Copied conflict resolution prompt for: ${conflictFile.relativePath}`);
   } catch (error) {
     logger.error('Failed to copy conflict prompt', error as Error);
-    vscode.window.showErrorMessage('JJJ: プロンプトのコピーに失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.promptCopyFailed', 'Failed to copy prompt')}`);
   }
 }
 
@@ -155,7 +156,7 @@ export async function copyAllConflictsPrompt(conflictProvider: ConflictTreeDataP
     const conflictCount = conflictProvider.getConflictCount();
 
     if (conflictCount === 0) {
-      vscode.window.showInformationMessage('JJJ: コンフリクトはありません');
+      vscode.window.showInformationMessage(`JJJ: ${localize('notification.noConflicts', 'No conflicts')}`);
       return;
     }
 
@@ -166,13 +167,13 @@ export async function copyAllConflictsPrompt(conflictProvider: ConflictTreeDataP
     await vscode.env.clipboard.writeText(prompt);
 
     vscode.window.showInformationMessage(
-      `JJJ: 全コンフリクトのプロンプトをコピーしました (${conflictCount}件)`
+      `JJJ: ${localize('notification.allPromptsCopied', 'All conflicts prompt copied ({0} conflicts)', conflictCount.toString())}`
     );
 
     logger.info(`Copied prompt for all ${conflictCount} conflicts`);
   } catch (error) {
     logger.error('Failed to copy all conflicts prompt', error as Error);
-    vscode.window.showErrorMessage('JJJ: プロンプトのコピーに失敗しました');
+    vscode.window.showErrorMessage(`JJJ: ${localize('notification.promptCopyFailed', 'Failed to copy prompt')}`);
   }
 }
 

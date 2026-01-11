@@ -1,26 +1,26 @@
 # Jujutsu Journaling (jjj)
 
-jujutsuで文書の変更履歴を自動記録する拡張機能
+A VS Code extension that automatically tracks document change history using Jujutsu
 
-## 機能
+## Features
 
-- Git管理フォルダの自動検出
-- 編集内容の自動コミット・プッシュ（ファイル更新が1分間止まったら実行）
-- 他メンバーの変更の自動取得
-- 手動同期トリガー（Ctrl+Shift+S / Cmd+Shift+S）
-- コンフリクト状態での保存対応
+- Automatic detection of Git-managed folders
+- Auto-commit and push edited content (executes after 1 minute of no file updates)
+- Automatic fetching of changes from other team members
+- Manual sync trigger (Ctrl+Shift+S / Cmd+Shift+S)
+- Support for saving in conflict states
 
-## 前提条件
+## Prerequisites
 
-- **jujutsu (jj)** がインストールされていること
-  - インストール方法: https://github.com/martinvonz/jj#installation
-  - `jj --version` でバージョンが表示されることを確認してください
-- Git管理されたワークスペースを開いていること
-- リモートリポジトリが設定されていること
+- **jujutsu (jj)** must be installed
+  - Installation guide: https://github.com/martinvonz/jj#installation
+  - Verify installation by running `jj --version`
+- Working in a Git-managed workspace
+- Remote repository must be configured
 
-## 推奨設定
+## Recommended Settings
 
-自動保存を有効化することを推奨します:
+Enable auto-save for the best experience:
 
 ```json
 {
@@ -29,64 +29,64 @@ jujutsuで文書の変更履歴を自動記録する拡張機能
 }
 ```
 
-## 使い方
+## Usage
 
-1. Git管理されたフォルダをCursorで開く
-2. 拡張機能が自動的に同期を開始
-3. ファイルを編集・保存すると自動的にコミット・プッシュされる
-4. 手動同期: コマンドパレットから「JJJ: 今すぐ同期」を実行
+1. Open a Git-managed folder in Cursor
+2. The extension will automatically start syncing
+3. Edit and save files - they will be automatically committed and pushed
+4. Manual sync: Run "JJJ: Sync Now" from the command palette
 
-## 自動同期の詳細動作
+## Auto-Sync Behavior Details
 
-### 変更検出メカニズム
-1. ファイル保存時にデバウンスタイマー（1分）を開始
-2. 1分間変更がないとき、`processQueue()`が発火
-3. **実際に変更があるかを確認**（`jj status`で判定）
-4. 変更がある場合のみコミット・プッシュを実行
-5. 変更がない場合は同期をスキップ
+### Change Detection Mechanism
+1. A debounce timer (1 minute) starts when a file is saved
+2. When there are no changes for 1 minute, `processQueue()` fires
+3. **Verifies if there are actual changes** (determined by `jj status`)
+4. Only commits and pushes if there are actual changes
+5. Skips sync if there are no changes
 
-### キューと変更の乖離
-エディタでファイルを保存しても、実際の内容が変わらないケースがあります：
-- 自動保存で同じ内容が再保存された
-- 保存後にすぐ編集内容をrevertした
-- 一時的な変更を取り消した
+### Queue and Change Discrepancy
+There are cases where saving a file in the editor doesn't actually change the content:
+- Auto-save re-saved the same content
+- Edits were reverted immediately after saving
+- Temporary changes were undone
 
-このような場合、キューにはファイルが残っていても`jj status`では変更なしと判定されます。
-拡張機能は実際の変更のみをコミットするため、不要なコミットが作られることはありません。
+In such cases, even if files remain in the queue, `jj status` determines there are no changes.
+The extension only commits actual changes, preventing unnecessary commits.
 
-### ログ出力
-変更がない場合は以下のようにログに記録されます：
+### Log Output
+When there are no changes, the following is logged:
 ```
 [INFO] No uncommitted changes found. Skipping auto-commit (queue had 3 files)
 ```
 
-## コマンド
+## Commands
 
-- `JJJ: 今すぐ同期` - 手動で同期を実行
-- `JJJ: 自動同期を有効化` - 自動同期を開始
-- `JJJ: 自動同期を無効化` - 自動同期を停止
+- `JJJ: Sync Now` - Manually execute sync
+- `JJJ: Enable Auto Sync` - Start auto-sync
+- `JJJ: Disable Auto Sync` - Stop auto-sync
 
-## 設定
+## Settings
 
-- `jjj.autoSyncEnabled` (boolean, デフォルト: true) - 自動同期を有効化
+- `jjj.autoSyncEnabled` (boolean, default: true) - Enable auto-sync
 
-## トラブルシューティング
+## Troubleshooting
 
-### 「jjが見つかりません」というエラーが表示される
+### "jj not found" error appears
 
-jujutsuがインストールされていないか、PATHに追加されていません。
-以下を確認してください:
+Jujutsu is not installed or not added to PATH.
+Check the following:
 
-1. jujutsuがインストールされていること
-2. ターミナルで `jj --version` が実行できること
-3. Cursorを再起動してPATHを再読み込み
+1. Verify that Jujutsu is installed
+2. Confirm that `jj --version` runs in the terminal
+3. Restart Cursor to reload PATH
 
-### 同期が動作しない
+### Sync is not working
 
-1. ステータスバーの表示を確認してください
-2. Git管理されたフォルダを開いていることを確認してください
-3. リモートリポジトリが設定されていることを確認してください
+1. Check the status bar display
+2. Verify that you have a Git-managed folder open
+3. Confirm that a remote repository is configured
 
-## ライセンス
+## License
 
 MIT
