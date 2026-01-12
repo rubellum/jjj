@@ -1,5 +1,8 @@
 # Jujutsu Journaling (jjj)
 
+[![Test](https://github.com/rubellum/jjj/actions/workflows/test.yml/badge.svg)](https://github.com/rubellum/jjj/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/rubellum/jjj/branch/main/graph/badge.svg)](https://codecov.io/gh/rubellum/jjj)
+
 A VS Code extension that automatically tracks document change history using Jujutsu
 
 ## Features
@@ -69,6 +72,57 @@ When there are no changes, the following is logged:
 ## Settings
 
 - `jjj.autoSyncEnabled` (boolean, default: true) - Enable auto-sync
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run unit tests only
+npm run test:unit
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Structure
+
+The extension includes comprehensive automated tests:
+
+- **Unit Tests**: Core logic, services, and utilities
+- **Coverage**: 84.87% overall (166 passing tests)
+  - Core logic: 89.04%
+  - Services: 65.02%
+  - Utils: 97.92%
+
+### Adding New Tests
+
+1. Create a test file in `src/test/unit/` following the pattern `*.test.ts`
+2. Use Mocha's TDD style with `suite()` and `test()`
+3. Utilize mock helpers from `src/test/helpers/`
+
+Example:
+
+```typescript
+import * as assert from 'assert';
+import { MockCommandExecutor } from '../../helpers/mockChildProcess';
+
+suite('My Test Suite', () => {
+  let mockExecutor: MockCommandExecutor;
+
+  setup(() => {
+    mockExecutor = new MockCommandExecutor();
+  });
+
+  test('should work correctly', async () => {
+    mockExecutor.mockNoChanges();
+    // Test implementation
+  });
+});
+```
 
 ## Troubleshooting
 
