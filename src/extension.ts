@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
       logger.info('No workspace folder found, extension inactive');
-      statusBar.setState(localize('status.notApplicable', 'Not Applicable'));
+      statusBar.setState('notApplicable');
       return;
     }
 

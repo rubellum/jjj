@@ -189,7 +189,7 @@ export class AutoCommitService {
 
     // その他のエラー
     this.notifications.error('自動同期に失敗しました');
-    this.statusBar.setState('有効');
+    this.statusBar.setState('enabled');
     this.changeQueue.clear();
     this.retryCount = 0;
   }

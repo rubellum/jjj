@@ -160,7 +160,7 @@
     "watch": "node esbuild.js --watch",
     "test": "npm run compile-tests && vscode-test",
     "compile-tests": "tsc -p ./ --outDir out",
-    "test:unit": "npm run compile-tests && c8 mocha 'out/test/unit/**/*.test.js'",
+    "test:unit": "npm run compile-tests && c8 mocha --ui tdd --require out/test/setup.js 'out/test/unit/**/*.test.js'",
     "test:coverage": "npm run compile-tests && c8 --reporter=html --reporter=text npm run test",
     "lint": "eslint src --ext ts"
   },

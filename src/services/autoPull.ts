@@ -74,6 +74,6 @@ export class AutoPullService {
 
     // その他のエラー
     logger.error('Unexpected error during auto-pull', error);
-    this.statusBar.setState('オフライン');
+    this.statusBar.setState('offline');
   }
 }

@@ -84,7 +84,7 @@ export class SyncEngine {
       logger.info('DocSync initialization completed');
     } catch (error) {
       logger.error('Failed to initialize DocSync', error as Error);
-      this.statusBar.setState('対象外');
+      this.statusBar.setState('notApplicable');
       this.notifications.error('初期化に失敗しました');
     }
   }

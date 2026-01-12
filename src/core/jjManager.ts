@@ -27,7 +27,7 @@ export class JJManager {
    */
   async isJJAvailable(): Promise<boolean> {
     try {
-      await execAsync('jj --version', {
+      await this.commandExecutor.execute('jj --version', {
         timeout: CONSTANTS.COMMAND_TIMEOUT
       });
       logger.info('jj command is available');
@@ -181,7 +181,7 @@ export class JJManager {
       logger.debug(`Current branch: ${branch}`);
       return branch;
     } catch (error) {
-      logger.warn('Failed to get current branch', error as Error);
+      logger.error('Failed to get current branch', error as Error);
       return null;
     }
   }
@@ -209,7 +209,7 @@ export class JJManager {
       logger.debug(`Remote changes: ${hasChanges}`);
       return hasChanges;
     } catch (error) {
-      logger.warn('Failed to check remote changes', error as Error);
+      logger.error('Failed to check remote changes', error as Error);
       return false;
     }
   }
@@ -338,7 +338,7 @@ export class JJManager {
 
       return changedFiles;
     } catch (error) {
-      logger.warn(`Failed to get changed files for commit ${commitId}`, error as Error);
+      logger.error(`Failed to get changed files for commit ${commitId}`, error as Error);
       return [];
     }
   }
