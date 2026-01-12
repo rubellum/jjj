@@ -5,7 +5,14 @@
 import { createMockVSCode } from './helpers/mockVSCode';
 
 // Create global vscode mock
-const vscode = createMockVSCode();
+const vscodeMocks = createMockVSCode();
+
+const vscode = {
+  window: vscodeMocks.window,
+  workspace: vscodeMocks.workspace,
+  commands: vscodeMocks.commands,
+  Uri: vscodeMocks.Uri
+};
 
 // Mock the vscode module globally
 (global as any).vscode = vscode;

@@ -51,7 +51,11 @@ export function createMockVSCode() {
     registerCommand: sinon.stub().returns({ dispose: sinon.stub() })
   };
 
-  return { window, workspace, commands };
+  const Uri = {
+    file: (path: string) => ({ fsPath: path })
+  };
+
+  return { window, workspace, commands, Uri };
 }
 
 /**
