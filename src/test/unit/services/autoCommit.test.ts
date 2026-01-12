@@ -173,7 +173,7 @@ suite('AutoCommitService Test Suite', () => {
       assert.ok(pushCall, 'push should be called');
     });
 
-    test.skip('コミットメッセージにタイムスタンプが含まれる', async () => {
+    test('コミットメッセージにタイムスタンプが含まれる', async () => {
       mockExecutor.mockWithChanges();
       mockExecutor.mockCommitSuccess();
       mockExecutor.setResponse(/git branch/, { stdout: 'main', stderr: '' });
@@ -189,7 +189,10 @@ suite('AutoCommitService Test Suite', () => {
         .find((call: any) => call.args[0].includes('jj commit'));
 
       assert.ok(commitCall);
-      assert.ok(commitCall.args[0].includes('[auto-commit]'), 'commit message should include [auto-commit]');
+      const commitCommand = commitCall.args[0];
+      assert.ok(commitCommand.includes('Auto-sync:'), 'commit message should include Auto-sync:');
+      // タイムスタンプ形式をチェック: YYYY-MM-DD HH:mm
+      assert.ok(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(commitCommand), 'commit message should include timestamp');
     });
 
     test('自動同期が無効の場合、processQueueをスキップ', async () => {
@@ -217,12 +220,14 @@ suite('AutoCommitService Test Suite', () => {
   });
 
   suite('processQueue - エラーハンドリング', () => {
-    test.skip('ネットワークエラー時にリトライ', async () => {
+    test('ネットワークエラー時にリトライ', async () => {
       mockExecutor.mockWithChanges();
       mockExecutor.mockCommitSuccess();
 
       // プッシュでネットワークエラー
       let pushCallCount = 0;
+      // 既存のモックをリセット
+      mockExecutor.executeStub.reset();
       mockExecutor.executeStub.callsFake(async (cmd: string) => {
         if (cmd.includes('jj status')) {
           return { stdout: 'Working copy changes:\nM file.txt', stderr: '' };
@@ -230,17 +235,18 @@ suite('AutoCommitService Test Suite', () => {
         if (cmd.includes('jj commit')) {
           return { stdout: 'Committed', stderr: '' };
         }
-        if (cmd.includes('jj git push')) {
-          pushCallCount++;
-          const error: any = new Error('Connection refused');
-          error.type = 'NETWORK_ERROR';
-          throw error;
-        }
         if (cmd.includes('git branch')) {
           return { stdout: 'main', stderr: '' };
         }
         if (cmd.includes('jj bookmark set')) {
           return { stdout: 'Set', stderr: '' };
+        }
+        if (cmd.includes('jj git push')) {
+          pushCallCount++;
+          // parseJJErrorが'Connection refused'を検出してNETWORK_ERRORと判定
+          const error: any = new Error('Connection refused');
+          error.stderr = 'Connection refused';
+          throw error;
         }
         throw new Error(`Unexpected command: ${cmd}`);
       });
@@ -254,11 +260,13 @@ suite('AutoCommitService Test Suite', () => {
       assert.ok(mockNotifications.networkError.called, 'should show network error notification');
     });
 
-    test.skip('リモートに新しい変更がある場合、プル後に再プッシュ', async () => {
+    test('リモートに新しい変更がある場合、プル後に再プッシュ', async () => {
       mockExecutor.mockWithChanges();
       mockExecutor.mockCommitSuccess();
 
       let pushCallCount = 0;
+      // 既存のモックをリセット
+      mockExecutor.executeStub.reset();
       mockExecutor.executeStub.callsFake(async (cmd: string) => {
         if (cmd.includes('jj status')) {
           return { stdout: 'Working copy changes:\nM file.txt', stderr: '' };
@@ -266,20 +274,28 @@ suite('AutoCommitService Test Suite', () => {
         if (cmd.includes('jj commit')) {
           return { stdout: 'Committed', stderr: '' };
         }
-        if (cmd.includes('jj git push')) {
-          pushCallCount++;
-          if (pushCallCount === 1) {
-            const error: any = new Error('Remote has new commits');
-            error.type = 'REMOTE_CHANGED';
-            throw error;
-          }
-          return { stdout: 'Pushed', stderr: '' };
-        }
         if (cmd.includes('git branch')) {
           return { stdout: 'main', stderr: '' };
         }
         if (cmd.includes('jj bookmark set')) {
           return { stdout: 'Set', stderr: '' };
+        }
+        if (cmd.includes('jj git push')) {
+          pushCallCount++;
+          if (pushCallCount === 1) {
+            // parseJJErrorが'remote has new commits'を検出してREMOTE_CHANGEDと判定
+            const error: any = new Error('remote has new commits');
+            error.stderr = 'remote has new commits';
+            throw error;
+          }
+          return { stdout: 'Pushed', stderr: '' };
+        }
+        // autoPullService.pull()内で呼ばれるコマンド
+        if (cmd.includes('jj git fetch')) {
+          return { stdout: 'Fetched', stderr: '' };
+        }
+        if (cmd.includes('jj log -r')) {
+          return { stdout: '', stderr: '' }; // リモート変更なし
         }
         throw new Error(`Unexpected command: ${cmd}`);
       });
@@ -296,28 +312,27 @@ suite('AutoCommitService Test Suite', () => {
       assert.strictEqual(pushCallCount, 2, 'should retry push after pull');
     });
 
-    test.skip('コンフリクト発生時、そのままコミット・プッシュ', async () => {
-      // 最初の変更検出でコンフリクトあり
+    test('コンフリクト発生時、そのままコミット・プッシュ', async () => {
       let statusCallCount = 0;
       let commitCallCount = 0;
 
+      // 既存のモックをリセット
+      mockExecutor.executeStub.reset();
       mockExecutor.executeStub.callsFake(async (cmd: string) => {
         if (cmd.includes('jj status')) {
           statusCallCount++;
-          if (statusCallCount === 1) {
-            // hasUncommittedChanges用
-            return { stdout: 'Working copy changes:\nM file.txt', stderr: '' };
-          }
-          return { stdout: 'No changes', stderr: '' };
+          // 常に変更ありを返す
+          return { stdout: 'Working copy changes:\nM file.txt', stderr: '' };
         }
         if (cmd.includes('jj commit')) {
           commitCallCount++;
           if (commitCallCount === 1) {
             // 最初のコミットでコンフリクトエラー
-            const error: any = new Error('Conflict detected');
-            error.type = 'CONFLICT';
+            const error: any = new Error('conflict detected during commit');
+            error.stderr = 'conflict detected during commit';
             throw error;
           }
+          // 2回目はコンフリクト付きで成功
           return { stdout: 'Committed with conflict', stderr: '' };
         }
         if (cmd.includes('jj git push')) {

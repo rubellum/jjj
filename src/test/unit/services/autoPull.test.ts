@@ -117,7 +117,7 @@ suite('AutoPullService Test Suite', () => {
   });
 
   suite('pull - エラーハンドリング', () => {
-    test.skip('コンフリクト発生時、syncCompleteWithConflictsステートに遷移', async () => {
+    test('コンフリクト発生時、syncCompleteWithConflictsステートに遷移', async () => {
       mockExecutor.mockFetchSuccess();
       mockExecutor.setResponse(/jj log -r/, {
         stdout: 'abc123',
@@ -128,7 +128,9 @@ suite('AutoPullService Test Suite', () => {
         stderr: ''
       });
 
-      // マージでコンフリクトエラー
+      // マージでコンフリクトエラー（メッセージに'conflict'を含める）
+      // 既存のモックをリセット
+      mockExecutor.executeStub.reset();
       mockExecutor.executeStub.callsFake(async (cmd: string) => {
         if (cmd.includes('jj git fetch')) {
           return { stdout: 'Fetched', stderr: '' };
@@ -140,9 +142,10 @@ suite('AutoPullService Test Suite', () => {
           return { stdout: 'main', stderr: '' };
         }
         if (cmd.includes('jj rebase')) {
-          // JJErrorインスタンスをthrow
-          const { JJError } = require('../../../types');
-          throw new JJError('CONFLICT', 'Conflict during merge');
+          // parseJJErrorがメッセージから'conflict'を検出してCONFLICTと判定
+          const error: any = new Error('conflict during merge');
+          error.stderr = 'conflict during merge';
+          throw error;
         }
         throw new Error(`Unexpected command: ${cmd}`);
       });
