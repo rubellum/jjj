@@ -4,6 +4,7 @@ dist
 *.vsix
 .vscode-test/
 .DS_Store
+coverage
 
 # Environment variables
 .env*
