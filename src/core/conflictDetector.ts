@@ -1,14 +1,21 @@
-import * as fs from 'fs/promises';
 import { ConflictInfo } from '../types';
 import { logger } from '../utils/logger';
+import { IFileSystem } from './interfaces';
+import { FileSystemAdapter } from './fileSystemAdapter';
 
 export class ConflictDetector {
+  private fileSystem: IFileSystem;
+
+  constructor(fileSystem?: IFileSystem) {
+    this.fileSystem = fileSystem || new FileSystemAdapter();
+  }
+
   /**
    * ファイル内のコンフリクトマーカーを検出
    */
   async detectConflictsInFile(filePath: string): Promise<ConflictInfo[]> {
     try {
-      const content = await fs.readFile(filePath, 'utf8');
+      const content = await this.fileSystem.readFile(filePath, 'utf8');
       return this.detectConflictsInContent(filePath, content);
     } catch (error) {
       logger.error(`Failed to read file for conflict detection: ${filePath}`, error as Error);
@@ -61,7 +68,7 @@ export class ConflictDetector {
    */
   async hasConflictMarkersInFile(filePath: string): Promise<boolean> {
     try {
-      const content = await fs.readFile(filePath, 'utf8');
+      const content = await this.fileSystem.readFile(filePath, 'utf8');
       return this.hasConflictMarkers(content);
     } catch (error) {
       logger.error(`Failed to check conflict markers in file: ${filePath}`, error as Error);

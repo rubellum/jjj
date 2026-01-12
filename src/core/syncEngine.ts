@@ -21,10 +21,11 @@ export class SyncEngine {
 
   constructor(
     statusBar: StatusBarManager,
-    notifications: NotificationManager
+    notifications: NotificationManager,
+    conflictDetector?: ConflictDetector
   ) {
     this.scheduler = new TimerScheduler();
-    this.conflictDetector = new ConflictDetector();
+    this.conflictDetector = conflictDetector || new ConflictDetector();
     this.statusBar = statusBar;
     this.notifications = notifications;
   }
@@ -32,11 +33,11 @@ export class SyncEngine {
   /**
    * UC-01: Git管理フォルダの自動検出と同期開始
    */
-  async initialize(workspacePath: string): Promise<void> {
+  async initialize(workspacePath: string, jjManager?: JJManager): Promise<void> {
     try {
       logger.info(`Initializing DocSync for workspace: ${workspacePath}`);
       this.workspacePath = workspacePath;
-      this.jjManager = new JJManager(workspacePath);
+      this.jjManager = jjManager || new JJManager(workspacePath);
 
       // Step 1: jjコマンドの存在確認
       const isJJAvailable = await this.jjManager.isJJAvailable();

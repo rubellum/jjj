@@ -1,19 +1,25 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import * as fs from 'fs';
 import * as path from 'path';
 import { JJError, CommitInfo } from '../types';
 import { parseJJError } from '../utils/errorHandler';
 import { logger } from '../utils/logger';
 import { CONSTANTS } from '../utils/constants';
-
-const execAsync = promisify(exec);
+import { ICommandExecutor, IFileSystem } from './interfaces';
+import { CommandExecutor } from './commandExecutor';
+import { FileSystemAdapter } from './fileSystemAdapter';
 
 export class JJManager {
   private workspacePath: string;
+  private commandExecutor: ICommandExecutor;
+  private fileSystem: IFileSystem;
 
-  constructor(workspacePath: string) {
+  constructor(
+    workspacePath: string,
+    commandExecutor?: ICommandExecutor,
+    fileSystem?: IFileSystem
+  ) {
     this.workspacePath = workspacePath;
+    this.commandExecutor = commandExecutor || new CommandExecutor();
+    this.fileSystem = fileSystem || new FileSystemAdapter();
   }
 
   /**
@@ -38,7 +44,7 @@ export class JJManager {
   async detectGitRepo(workspacePath?: string): Promise<boolean> {
     const targetPath = workspacePath || this.workspacePath;
     const gitPath = path.join(targetPath, '.git');
-    const exists = fs.existsSync(gitPath);
+    const exists = this.fileSystem.existsSync(gitPath);
     logger.info(`Git repository ${exists ? 'detected' : 'not found'} at ${targetPath}`);
     return exists;
   }
@@ -213,9 +219,26 @@ export class JJManager {
    */
   async merge(): Promise<void> {
     try {
+      // 現在のブランチを取得
+      const branch = await this.getCurrentBranch();
+      const branchName = branch || 'main';
+
+      // リモートブランチの存在を確認してからrebase
+      // jjでは@gitがgitリモートを参照する標準的な方法
+      let targetRevision = `${branchName}@git`;
+      
+      try {
+        // リモートブランチが存在するか確認
+        await this.runCommand(`jj log -r ${targetRevision} --limit 1`);
+      } catch (error) {
+        // リモートブランチが存在しない場合は、ローカルブランチを使用
+        logger.warn(`Remote branch ${targetRevision} not found, using local branch ${branchName}`);
+        targetRevision = branchName;
+      }
+
       // jjではrebaseを使用して変更を統合
-      await this.runCommand('jj rebase -d main@origin');
-      logger.info('Merged remote changes successfully');
+      await this.runCommand(`jj rebase -d ${targetRevision}`);
+      logger.info(`Merged remote changes successfully (target: ${targetRevision})`);
     } catch (error) {
       throw parseJJError(error);
     }
@@ -369,7 +392,7 @@ export class JJManager {
     try {
       logger.debug(`Running command: ${command}`);
 
-      const { stdout, stderr } = await execAsync(command, {
+      const { stdout, stderr } = await this.commandExecutor.execute(command, {
         cwd: this.workspacePath,
         timeout: timeout || CONSTANTS.COMMAND_TIMEOUT,
         encoding: 'utf8'

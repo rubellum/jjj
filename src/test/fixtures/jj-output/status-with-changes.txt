@@ -1,0 +1,3 @@
+Working copy changes:
+M README.md
+A new-file.txt
